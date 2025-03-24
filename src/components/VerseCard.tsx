@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Bookmark } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bookmark, ChevronDown, ChevronUp } from 'lucide-react';
 import { Verse } from '../hooks/useQuranData';
 import { useBookmarks } from '../hooks/useBookmarks';
 import { useAuth } from '../contexts/AuthProvider';
@@ -17,6 +17,7 @@ export const VerseCard = ({ verse, surahNumber, surahName, onPlay, isPlaying }: 
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { user } = useAuth();
   const bookmarked = user ? isBookmarked(surahNumber, verse.number) : false;
+  const [showTafsir, setShowTafsir] = useState(false);
 
   const handleBookmarkClick = () => {
     toggleBookmark(surahNumber, verse.number, verse.text, surahName);
@@ -62,6 +63,24 @@ export const VerseCard = ({ verse, surahNumber, surahName, onPlay, isPlaying }: 
         <p className="arabic-text text-xl md:text-2xl leading-loose">{verse.text}</p>
         {verse.translation && (
           <p className="text-muted-foreground text-sm md:text-base">{verse.translation}</p>
+        )}
+        
+        {verse.tafsir && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <div 
+              className="flex items-center cursor-pointer text-primary hover:text-primary/80 transition-colors" 
+              onClick={() => setShowTafsir(!showTafsir)}
+            >
+              <span className="text-sm font-medium ml-1">التفسير المختصر</span>
+              {showTafsir ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </div>
+            
+            {showTafsir && (
+              <p className="mt-2 text-sm text-muted-foreground bg-secondary/30 p-3 rounded-md">
+                {verse.tafsir}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>

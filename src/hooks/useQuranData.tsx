@@ -15,6 +15,7 @@ export interface Verse {
   number: number;
   text: string;
   translation?: string;
+  tafsir?: string;
   audioUrl?: string;
 }
 
@@ -26,6 +27,13 @@ export interface SurahDetail {
   revelationType: string;
   numberOfAyahs: number;
   ayahs: Verse[];
+}
+
+export interface Reciter {
+  identifier: string;
+  language: string;
+  name: string;
+  englishName: string;
 }
 
 // Fetch list of Surahs
@@ -41,9 +49,9 @@ export const useSurahs = () => {
 };
 
 // Fetch specific Surah with verses
-export const useSurah = (surahNumber: number) => {
+export const useSurah = (surahNumber: number, reciterId: string = 'ar.alafasy') => {
   return useQuery({
-    queryKey: ['surah', surahNumber],
+    queryKey: ['surah', surahNumber, reciterId],
     queryFn: async () => {
       // Fetch Arabic text
       const arabicResponse = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}`);
@@ -53,6 +61,10 @@ export const useSurah = (surahNumber: number) => {
       const translationResponse = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/en.sahih`);
       const translationData = await translationResponse.json();
       
+      // Fetch tafsir (simplified interpretation)
+      const tafsirResponse = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/ar.muyassar`);
+      const tafsirData = await tafsirResponse.json();
+      
       // Combine data
       const surahDetail: SurahDetail = arabicData.data;
       
@@ -61,7 +73,8 @@ export const useSurah = (surahNumber: number) => {
           number: ayah.number,
           text: ayah.text,
           translation: translationData.data.ayahs[index]?.text || '',
-          audioUrl: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`
+          tafsir: tafsirData.data?.ayahs[index]?.text || '',
+          audioUrl: `https://cdn.islamic.network/quran/audio/128/${reciterId}/${ayah.number}.mp3`
         }));
       }
       
@@ -78,7 +91,7 @@ export const useReciters = () => {
     queryFn: async () => {
       const response = await fetch('https://api.alquran.cloud/v1/edition/format/audio');
       const data = await response.json();
-      return data.data;
+      return data.data as Reciter[];
     },
   });
 };

@@ -5,7 +5,7 @@ import { Book } from 'lucide-react';
 
 const Bookmarks = () => {
   return (
-    <div className="min-h-screen pt-20 px-4">
+    <div className="min-h-screen pt-20 px-4 text-right">
       <div className="container mx-auto">
         <div className="mb-8 flex items-center">
           <Book className="ml-3" size={24} />

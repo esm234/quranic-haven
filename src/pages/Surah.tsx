@@ -4,7 +4,7 @@ import { QuranReader } from '../components/QuranReader';
 
 const Surah = () => {
   return (
-    <div className="min-h-screen pt-20 px-4">
+    <div className="min-h-screen pt-20 px-4 text-right">
       <div className="container mx-auto">
         <QuranReader />
       </div>

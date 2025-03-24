@@ -3,6 +3,7 @@ import React from 'react';
 import { Bookmark } from 'lucide-react';
 import { Verse } from '../hooks/useQuranData';
 import { useBookmarks } from '../hooks/useBookmarks';
+import { useAuth } from '../contexts/AuthProvider';
 
 interface VerseCardProps {
   verse: Verse;
@@ -14,7 +15,12 @@ interface VerseCardProps {
 
 export const VerseCard = ({ verse, surahNumber, surahName, onPlay, isPlaying }: VerseCardProps) => {
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const bookmarked = isBookmarked(surahNumber, verse.number);
+  const { user } = useAuth();
+  const bookmarked = user ? isBookmarked(surahNumber, verse.number) : false;
+
+  const handleBookmarkClick = () => {
+    toggleBookmark(surahNumber, verse.number, verse.text, surahName);
+  };
 
   return (
     <div className="verse-transition glass rounded-xl p-5 mb-4 transform hover:shadow-lg transition-all duration-300">
@@ -25,29 +31,31 @@ export const VerseCard = ({ verse, surahNumber, surahName, onPlay, isPlaying }: 
           </div>
           <button 
             onClick={() => onPlay(verse)}
-            className={`px-3 py-1.5 rounded-full text-xs ${
+            className={`px-3 py-1.5 mr-2 rounded-full text-xs ${
               isPlaying 
                 ? 'bg-primary/30 text-foreground animate-pulse' 
                 : 'bg-secondary text-foreground/70 hover:bg-primary/20'
             } transition-colors`}
           >
-            {isPlaying ? 'Playing' : 'Play'}
+            {isPlaying ? 'تشغيل' : 'استماع'}
           </button>
         </div>
-        <button
-          onClick={() => toggleBookmark(surahNumber, verse.number, surahName)}
-          className="p-1.5 rounded-full hover:bg-secondary transition-colors"
-          aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
-        >
-          <Bookmark
-            size={18}
-            className={`transition-all ${
-              bookmarked 
-                ? 'fill-foreground text-foreground' 
-                : 'fill-transparent text-muted-foreground'
-            }`}
-          />
-        </button>
+        {user && (
+          <button
+            onClick={handleBookmarkClick}
+            className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+            aria-label={bookmarked ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
+          >
+            <Bookmark
+              size={18}
+              className={`transition-all ${
+                bookmarked 
+                  ? 'fill-foreground text-foreground' 
+                  : 'fill-transparent text-muted-foreground'
+              }`}
+            />
+          </button>
+        )}
       </div>
       
       <div className="space-y-4">

@@ -11,7 +11,7 @@ export const SurahList = () => {
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-muted-foreground">Loading Surahs...</p>
+          <p className="mt-4 text-muted-foreground">جار تحميل السور...</p>
         </div>
       </div>
     );
@@ -20,8 +20,8 @@ export const SurahList = () => {
   if (error) {
     return (
       <div className="text-center p-8 bg-destructive/10 rounded-lg">
-        <p className="text-destructive font-medium">Failed to load Surahs</p>
-        <p className="text-muted-foreground mt-2">Please check your connection and try again.</p>
+        <p className="text-destructive font-medium">فشل تحميل السور</p>
+        <p className="text-muted-foreground mt-2">يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
       </div>
     );
   }
@@ -45,10 +45,10 @@ export const SurahList = () => {
           </div>
           <div className="mt-3 flex justify-between items-center">
             <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-secondary">
-              {surah.revelationType}
+              {surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}
             </span>
             <span className="text-xs text-muted-foreground">
-              {surah.numberOfAyahs} verses
+              {surah.numberOfAyahs} آية
             </span>
           </div>
         </Link>

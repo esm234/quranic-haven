@@ -9,7 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          surah_name: string
+          surah_number: number
+          user_id: string
+          verse_number: number
+          verse_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          surah_name: string
+          surah_number: number
+          user_id: string
+          verse_number: number
+          verse_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          surah_name?: string
+          surah_number?: number
+          user_id?: string
+          verse_number?: number
+          verse_text?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          font_size: string | null
+          id: string
+          last_read_surah: number | null
+          last_read_verse: number | null
+          reciter: string | null
+          theme: string | null
+          translation_source: string | null
+          user_id: string
+        }
+        Insert: {
+          font_size?: string | null
+          id?: string
+          last_read_surah?: number | null
+          last_read_verse?: number | null
+          reciter?: string | null
+          theme?: string | null
+          translation_source?: string | null
+          user_id: string
+        }
+        Update: {
+          font_size?: string | null
+          id?: string
+          last_read_surah?: number | null
+          last_read_verse?: number | null
+          reciter?: string | null
+          theme?: string | null
+          translation_source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

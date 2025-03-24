@@ -14,7 +14,7 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
   
   const { data: searchResults, isLoading } = useQuranSearch(debouncedTerm);
   
-  // Debounce search term
+  // عمل تأخير للبحث
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedTerm(searchTerm);
@@ -42,21 +42,21 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
           <Search size={18} className="text-muted-foreground" />
         </div>
         <input
           type="text"
           value={searchTerm}
           onChange={handleChange}
-          placeholder="Search the Quran..."
-          className="block w-full pl-10 pr-10 py-2.5 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="ابحث في القرآن الكريم..."
+          className="block w-full pr-10 pl-10 py-2.5 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
           autoFocus
         />
         {searchTerm && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            className="absolute inset-y-0 left-0 flex items-center pl-3"
           >
             <X size={18} className="text-muted-foreground hover:text-foreground" />
           </button>
@@ -68,7 +68,7 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
           {isLoading ? (
             <div className="p-4 text-center">
               <div className="inline-block h-6 w-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-              <p className="mt-2 text-sm text-muted-foreground">Searching...</p>
+              <p className="mt-2 text-sm text-muted-foreground">جار البحث...</p>
             </div>
           ) : searchResults?.matches?.length ? (
             <div className="divide-y divide-border">
@@ -79,12 +79,12 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
                   className="block p-3 hover:bg-secondary/40 transition-colors"
                   onClick={handleItemClick}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col justify-between items-start">
                     <div>
                       <p className="text-sm font-medium">
                         {match.surah.englishName} ({match.surah.number}:{match.numberInSurah})
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1 arabic-text">
                         {match.text.length > 120 
                           ? match.text.substring(0, 120) + '...' 
                           : match.text
@@ -97,7 +97,7 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
             </div>
           ) : (
             <div className="p-4 text-center text-muted-foreground">
-              No results found
+              لم يتم العثور على نتائج
             </div>
           )}
         </div>

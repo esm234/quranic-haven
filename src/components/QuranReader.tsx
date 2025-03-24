@@ -5,6 +5,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSurah, Verse } from '../hooks/useQuranData';
 import { VerseCard } from './VerseCard';
 import { AudioPlayer } from './AudioPlayer';
+import { useAuth } from '../contexts/AuthProvider';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export const QuranReader = () => {
   const { surahNumber, verseNumber } = useParams();
@@ -15,17 +18,18 @@ export const QuranReader = () => {
   const [currentVerse, setCurrentVerse] = useState<Verse | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   
   const { data: surah, isLoading, error } = useSurah(surahId);
   
   useEffect(() => {
-    // Scroll to specific verse if provided in URL
+    // التمرير إلى آية محددة إذا كانت مقدمة في عنوان URL
     if (surah?.ayahs && initialVerseId > 1) {
       const verseToPlay = surah.ayahs.find(v => v.number % 1000 === initialVerseId);
       if (verseToPlay) {
         setCurrentVerse(verseToPlay);
         
-        // Scroll to verse (with a slight delay to ensure rendering)
+        // التمرير إلى الآية (مع تأخير طفيف لضمان العرض)
         setTimeout(() => {
           const verseElement = document.getElementById(`verse-${initialVerseId}`);
           if (verseElement) {
@@ -34,7 +38,28 @@ export const QuranReader = () => {
         }, 500);
       }
     }
-  }, [surah, initialVerseId]);
+    
+    // حفظ آخر قراءة إذا كان المستخدم مسجل الدخول
+    const saveLastRead = async () => {
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('user_preferences')
+            .update({
+              last_read_surah: surahId,
+              last_read_verse: initialVerseId
+            })
+            .eq('user_id', user.id);
+            
+          if (error) throw error;
+        } catch (err) {
+          console.error('فشل حفظ آخر قراءة:', err);
+        }
+      }
+    };
+    
+    saveLastRead();
+  }, [surah, initialVerseId, surahId, user]);
   
   const handlePlayVerse = (verse: Verse) => {
     setCurrentVerse(verse);
@@ -78,7 +103,7 @@ export const QuranReader = () => {
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-muted-foreground">Loading Surah...</p>
+          <p className="mt-4 text-muted-foreground">جار تحميل السورة...</p>
         </div>
       </div>
     );
@@ -87,8 +112,8 @@ export const QuranReader = () => {
   if (error || !surah) {
     return (
       <div className="text-center p-8 bg-destructive/10 rounded-lg">
-        <p className="text-destructive font-medium">Failed to load Surah</p>
-        <p className="text-muted-foreground mt-2">Please check your connection and try again.</p>
+        <p className="text-destructive font-medium">فشل تحميل السورة</p>
+        <p className="text-muted-foreground mt-2">يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
       </div>
     );
   }
@@ -104,14 +129,14 @@ export const QuranReader = () => {
         <div className="flex space-x-2 mt-4 md:mt-0">
           <Link to="/" className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center space-x-2">
             <List size={18} />
-            <span>All Surahs</span>
+            <span className="mr-2">كافة السور</span>
           </Link>
         </div>
       </div>
       
       <div className="mb-6 glass p-4 rounded-lg text-center">
         <p className="text-sm text-muted-foreground">
-          {surah.numberOfAyahs} verses • {surah.revelationType}
+          {surah.numberOfAyahs} آية • {surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}
         </p>
         
         {surah.number !== 9 && (
@@ -145,8 +170,8 @@ export const QuranReader = () => {
               : 'bg-secondary hover:bg-secondary/70 transition-colors'
           }`}
         >
-          <ArrowLeft size={18} />
-          <span>Previous Surah</span>
+          <ArrowRight size={18} />
+          <span className="mr-2">السورة السابقة</span>
         </button>
         
         <button
@@ -158,8 +183,8 @@ export const QuranReader = () => {
               : 'bg-secondary hover:bg-secondary/70 transition-colors'
           }`}
         >
-          <span>Next Surah</span>
-          <ArrowRight size={18} />
+          <span className="ml-2">السورة التالية</span>
+          <ArrowLeft size={18} />
         </button>
       </div>
       

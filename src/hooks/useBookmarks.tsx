@@ -1,70 +1,140 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { useAuth } from '../contexts/AuthProvider';
+import { toast } from '@/hooks/use-toast';
 
 export interface Bookmark {
-  surahNumber: number;
-  verseNumber: number;
-  surahName: string;
-  timestamp: number;
+  id: string;
+  surah_number: number;
+  verse_number: number;
+  verse_text: string;
+  surah_name: string;
+  created_at: string;
 }
 
 export const useBookmarks = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   
-  // Load bookmarks from localStorage on initial load
+  // جلب الإشارات المرجعية من Supabase
   useEffect(() => {
-    const savedBookmarks = localStorage.getItem('quran-bookmarks');
-    if (savedBookmarks) {
-      try {
-        setBookmarks(JSON.parse(savedBookmarks));
-      } catch (error) {
-        console.error('Failed to parse bookmarks:', error);
+    const fetchBookmarks = async () => {
+      if (!user) {
+        setBookmarks([]);
+        setLoading(false);
+        return;
       }
-    }
-  }, []);
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('bookmarks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        setBookmarks(data || []);
+      } catch (error: any) {
+        console.error('Error fetching bookmarks:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchBookmarks();
+  }, [user]);
   
-  // Save bookmarks to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('quran-bookmarks', JSON.stringify(bookmarks));
-  }, [bookmarks]);
-  
-  // Check if a verse is bookmarked
+  // التحقق مما إذا كانت الآية مضافة للمفضلة
   const isBookmarked = (surahNumber: number, verseNumber: number) => {
     return bookmarks.some(
-      bookmark => bookmark.surahNumber === surahNumber && bookmark.verseNumber === verseNumber
+      bookmark => bookmark.surah_number === surahNumber && bookmark.verse_number === verseNumber
     );
   };
   
-  // Add bookmark
-  const addBookmark = (surahNumber: number, verseNumber: number, surahName: string) => {
+  // إضافة إشارة مرجعية
+  const addBookmark = async (surahNumber: number, verseNumber: number, verseText: string, surahName: string) => {
+    if (!user) {
+      toast({
+        title: 'تنبيه',
+        description: 'يجب تسجيل الدخول لإضافة الآية إلى المفضلة',
+      });
+      return;
+    }
+    
     if (!isBookmarked(surahNumber, verseNumber)) {
-      setBookmarks([
-        ...bookmarks,
-        {
-          surahNumber,
-          verseNumber,
-          surahName,
-          timestamp: Date.now()
-        }
-      ]);
+      try {
+        const { data, error } = await supabase
+          .from('bookmarks')
+          .insert({
+            user_id: user.id,
+            surah_number: surahNumber,
+            verse_number: verseNumber,
+            verse_text: verseText,
+            surah_name: surahName
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        setBookmarks([data[0], ...bookmarks]);
+        
+        toast({
+          title: 'تمت الإضافة',
+          description: 'تمت إضافة الآية إلى المفضلة بنجاح',
+        });
+      } catch (error: any) {
+        toast({
+          title: 'خطأ',
+          description: error.message || 'حدث خطأ أثناء إضافة الآية إلى المفضلة',
+          variant: 'destructive',
+        });
+      }
     }
   };
   
-  // Remove bookmark
-  const removeBookmark = (surahNumber: number, verseNumber: number) => {
-    setBookmarks(
-      bookmarks.filter(
-        bookmark => !(bookmark.surahNumber === surahNumber && bookmark.verseNumber === verseNumber)
-      )
-    );
+  // إزالة إشارة مرجعية
+  const removeBookmark = async (surahNumber: number, verseNumber: number) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('surah_number', surahNumber)
+        .eq('verse_number', verseNumber);
+      
+      if (error) throw error;
+      
+      setBookmarks(
+        bookmarks.filter(
+          bookmark => !(bookmark.surah_number === surahNumber && bookmark.verse_number === verseNumber)
+        )
+      );
+      
+      toast({
+        title: 'تمت الإزالة',
+        description: 'تمت إزالة الآية من المفضلة بنجاح',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ أثناء إزالة الآية من المفضلة',
+        variant: 'destructive',
+      });
+    }
   };
   
-  // Toggle bookmark
-  const toggleBookmark = (surahNumber: number, verseNumber: number, surahName: string) => {
+  // تبديل حالة الإشارة المرجعية
+  const toggleBookmark = async (surahNumber: number, verseNumber: number, verseText: string, surahName: string) => {
     if (isBookmarked(surahNumber, verseNumber)) {
-      removeBookmark(surahNumber, verseNumber);
+      await removeBookmark(surahNumber, verseNumber);
     } else {
-      addBookmark(surahNumber, verseNumber, surahName);
+      await addBookmark(surahNumber, verseNumber, verseText, surahName);
     }
   };
   
@@ -73,6 +143,7 @@ export const useBookmarks = () => {
     isBookmarked,
     addBookmark,
     removeBookmark,
-    toggleBookmark
+    toggleBookmark,
+    loading
   };
 };

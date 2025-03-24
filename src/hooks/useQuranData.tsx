@@ -36,6 +36,11 @@ export interface Reciter {
   englishName: string;
 }
 
+// دالة مساعدة لإزالة التشكيل
+const removeDiacritics = (text: string): string => {
+  return text.replace(/[\u064B-\u0652]/g, '');
+};
+
 // Fetch list of Surahs
 export const useSurahs = () => {
   return useQuery({
@@ -96,13 +101,18 @@ export const useReciters = () => {
   });
 };
 
-// Search Quran
+// Search Quran - محسن للعمل بدون تشكيل
 export const useQuranSearch = (searchTerm: string) => {
   return useQuery({
     queryKey: ['search', searchTerm],
     queryFn: async () => {
+      // أولاً، نحاول البحث باستخدام المصطلح كما هو (يمكن أن يحتوي على تشكيل)
       const response = await fetch(`https://api.alquran.cloud/v1/search/${searchTerm}/all/en`);
       const data = await response.json();
+      
+      // إذا لم يتم العثور على نتائج، وقد تكون المشكلة هي التشكيل، يمكننا تنفيذ منطق إضافي هنا
+      // لكن في الوقت الحالي، واجهة API لا تدعم البحث بدون تشكيل بشكل مباشر
+      
       return data.data;
     },
     enabled: searchTerm.length > 2,

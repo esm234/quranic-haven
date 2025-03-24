@@ -12,6 +12,7 @@ import Surah from "./pages/Surah";
 import Bookmarks from "./pages/Bookmarks";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 
@@ -61,6 +62,7 @@ const App = () => {
                   <Profile />
                 </ProtectedRoute>
               } />
+              <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

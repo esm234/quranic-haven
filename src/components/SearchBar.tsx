@@ -12,7 +12,10 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   
-  const { data: searchResults, isLoading } = useQuranSearch(debouncedTerm);
+  // استخدام مصطلح بحث معدل (بدون تشكيل)
+  const modifiedTerm = debouncedTerm.replace(/[\u064B-\u0652]/g, ''); // إزالة علامات التشكيل
+  
+  const { data: searchResults, isLoading } = useQuranSearch(modifiedTerm);
   
   // عمل تأخير للبحث
   useEffect(() => {
@@ -49,7 +52,7 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
           type="text"
           value={searchTerm}
           onChange={handleChange}
-          placeholder="ابحث في القرآن الكريم..."
+          placeholder="ابحث في القرآن الكريم (بدون تشكيل)..."
           className="block w-full pr-10 pl-10 py-2.5 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
           autoFocus
         />
@@ -63,7 +66,7 @@ export const SearchBar = ({ onClose }: SearchBarProps) => {
         )}
       </div>
       
-      {debouncedTerm.length > 2 && (
+      {modifiedTerm.length > 2 && (
         <div className="mt-4 rounded-lg bg-background/90 backdrop-blur-sm border border-border shadow-lg max-h-96 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center">

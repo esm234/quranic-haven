@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Search, Bookmark, Home, User, LogIn } from 'lucide-react';
+import { Menu, X, Sun, Moon, Search, Bookmark, Home, User, LogIn, MessageSquare } from 'lucide-react';
 import { SearchBar } from './SearchBar';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthProvider';
@@ -45,6 +45,10 @@ export const Navbar = () => {
             <Link to="/bookmarks" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-colors hover:bg-accent">
               <Bookmark size={20} />
               <span className="mx-2">المفضلة</span>
+            </Link>
+            <Link to="/contact" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-colors hover:bg-accent">
+              <MessageSquare size={20} />
+              <span className="mx-2">اتصل بنا</span>
             </Link>
             <button
               onClick={toggleSearch}
@@ -123,6 +127,14 @@ export const Navbar = () => {
             >
               <Bookmark size={20} />
               <span className="mx-2">المفضلة</span>
+            </Link>
+            <Link
+              to="/contact"
+              className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:bg-accent"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <MessageSquare size={20} />
+              <span className="mx-2">اتصل بنا</span>
             </Link>
             {!isLoading && (
               user ? (

@@ -40,16 +40,16 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 30% 10%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 25% 12%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 25% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -84,7 +84,7 @@
   }
   
   .glass {
-    @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg;
+    @apply bg-white/30 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg;
   }
   
   .glass-dark {
@@ -121,5 +121,96 @@
   
   .page-transition {
     @apply transition-all duration-500 ease-in-out;
+  }
+  
+  /* أنماط جديدة للآيات والتلاوة */
+  .verse-card-enter {
+    animation: slideInRight 0.5s forwards;
+  }
+  
+  .verse-card-exit {
+    animation: slideOutLeft 0.5s forwards;
+  }
+  
+  @keyframes slideInRight {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes slideOutLeft {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(-20px); opacity: 0; }
+  }
+  
+  .play-button {
+    @apply relative overflow-hidden transition-all duration-300 bg-primary/20 hover:bg-primary/40 text-foreground rounded-full flex items-center justify-center;
+  }
+  
+  .play-button::before {
+    content: '';
+    @apply absolute inset-0 bg-primary/10 scale-0 rounded-full transition-transform duration-300;
+  }
+  
+  .play-button:hover::before {
+    @apply scale-100;
+  }
+  
+  .play-button:active::before {
+    @apply scale-90 bg-primary/20;
+  }
+  
+  /* أحجام الخطوط المختلفة */
+  .font-size-small {
+    font-size: 0.95em;
+  }
+  
+  .font-size-medium {
+    font-size: 1.15em;
+  }
+  
+  .font-size-large {
+    font-size: 1.35em;
+  }
+  
+  .font-size-xlarge {
+    font-size: 1.5em;
+  }
+  
+  /* تأثيرات الانتقال بين الصفحات */
+  .surah-transition-enter {
+    animation: fadeInUp 0.5s forwards;
+  }
+  
+  @keyframes fadeInUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* تنسيق مشغل الصوت */
+  .audio-player {
+    @apply bg-background/80 dark:bg-black/60 backdrop-blur-lg shadow-lg border-t border-border;
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  .audio-progress {
+    @apply h-2 bg-primary/20 rounded-full appearance-none cursor-pointer;
+  }
+  
+  .audio-progress::-webkit-slider-thumb {
+    @apply appearance-none h-4 w-4 rounded-full bg-primary shadow-md;
+  }
+  
+  .audio-progress::-moz-range-thumb {
+    @apply h-4 w-4 rounded-full bg-primary border-none shadow-md;
+  }
+  
+  /* تأثيرات الأزرار */
+  .nav-button {
+    @apply transition-all duration-300 transform hover:scale-105 hover:shadow-md;
   }
 }

@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { Volume2, VolumeX, Pause, Play, SkipBack, SkipForward, Volume1, Volume, Disc } from 'lucide-react';
 import { Verse } from '../hooks/useQuranData';
+import { cn } from '@/lib/utils';
 
 interface AudioPlayerProps {
   currentVerse: Verse | null;
@@ -23,11 +24,13 @@ export const AudioPlayer = ({
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
     if (currentVerse?.audioUrl && audioRef.current) {
+      setIsLoading(true);
       audioRef.current.src = currentVerse.audioUrl;
       audioRef.current.load();
       if (isPlaying) {
@@ -69,6 +72,7 @@ export const AudioPlayer = ({
     setCurrentTime(currentTime);
     setDuration(duration);
     setProgress((currentTime / duration) * 100);
+    setIsLoading(false);
   };
   
   const handleEnded = () => {
@@ -112,14 +116,23 @@ export const AudioPlayer = ({
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
   
+  const getVolumeIcon = () => {
+    if (isMuted) return <VolumeX size={20} />;
+    if (volume < 0.3) return <Volume size={20} />;
+    if (volume < 0.7) return <Volume1 size={20} />;
+    return <Volume2 size={20} />;
+  };
+  
   if (!currentVerse) return null;
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border py-3 px-4 animate-fade-in-up">
+    <div className="audio-player fixed bottom-0 left-0 right-0 py-3 px-4 z-10">
       <audio 
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
+        onLoadedData={() => setIsLoading(false)}
+        onWaiting={() => setIsLoading(true)}
         preload="auto"
       />
       
@@ -129,31 +142,45 @@ export const AudioPlayer = ({
             <button 
               onClick={onPrevious}
               className="p-2 rounded-full hover:bg-accent transition-colors"
-              aria-label="Previous verse"
+              aria-label="الآية السابقة"
             >
               <SkipBack size={20} />
             </button>
             
             <button 
               onClick={togglePlay}
-              className="p-3 rounded-full bg-primary/20 hover:bg-primary/30 transition-colors"
-              aria-label={isPlaying ? "Pause" : "Play"}
+              className={cn(
+                "p-3 rounded-full transition-all duration-300",
+                isPlaying 
+                  ? "bg-primary/40 hover:bg-primary/50" 
+                  : "bg-primary/20 hover:bg-primary/30"
+              )}
+              aria-label={isPlaying ? "إيقاف" : "تشغيل"}
             >
-              {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+              {isLoading ? (
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                isPlaying ? <Pause size={20} /> : <Play size={20} />
+              )}
             </button>
             
             <button 
               onClick={onNext}
               className="p-2 rounded-full hover:bg-accent transition-colors"
-              aria-label="Next verse"
+              aria-label="الآية التالية"
             >
               <SkipForward size={20} />
             </button>
             
-            <div className="text-sm font-medium hidden sm:block">
-              {currentVerse.number % 1000} / {formatTime(currentTime)} 
-              <span className="text-muted-foreground mx-1">of</span> 
-              {formatTime(duration)}
+            <div className="hidden sm:flex items-center space-x-2">
+              <div className="text-xs text-secondary-foreground bg-secondary/30 px-2 py-1 rounded-full">
+                الآية {currentVerse.number % 1000}
+              </div>
+              <div className="text-sm font-medium">
+                {formatTime(currentTime)} 
+                <span className="text-muted-foreground mx-1">/</span> 
+                {formatTime(duration)}
+              </div>
             </div>
           </div>
           
@@ -164,17 +191,22 @@ export const AudioPlayer = ({
               max="100"
               value={progress}
               onChange={handleProgressChange}
-              className="w-full h-1.5 bg-primary/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
+              className="audio-progress w-full"
+              aria-label="تقدم التشغيل"
             />
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground sm:hidden">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
           </div>
           
           <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
             <button 
               onClick={toggleMute}
               className="p-2 rounded-full hover:bg-accent transition-colors"
-              aria-label={isMuted ? "Unmute" : "Mute"}
+              aria-label={isMuted ? "إلغاء كتم الصوت" : "كتم الصوت"}
             >
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              {getVolumeIcon()}
             </button>
             
             <div className="w-20">
@@ -185,8 +217,16 @@ export const AudioPlayer = ({
                 step="0.01"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="w-full h-1.5 bg-primary/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground"
+                className="audio-progress w-full"
+                aria-label="مستوى الصوت"
               />
+            </div>
+            
+            <div className="flex items-center space-x-2 pr-1">
+              <Disc size={18} className={`text-primary ${isPlaying ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-medium hidden sm:inline-block">
+                {currentVerse.number % 1000}
+              </span>
             </div>
           </div>
         </div>

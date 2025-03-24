@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Bookmark, List, ChevronDown, ChevronUp, ChevronRightSquare, ChevronLeftSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, List, ChevronDown, ChevronUp, ChevronRightSquare, ChevronLeftSquare, Moon, Sun, BookOpen, BookMarked, Type, Settings } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSurah, Verse, useReciters } from '../hooks/useQuranData';
 import { VerseCard } from './VerseCard';
@@ -9,6 +9,14 @@ import { useAuth } from '../contexts/AuthProvider';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useTheme } from '../hooks/useTheme';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const QuranReader = () => {
   const { surahNumber, verseNumber } = useParams();
@@ -22,9 +30,11 @@ export const QuranReader = () => {
   const [currentVerseNumber, setCurrentVerseNumber] = useState(initialVerseId);
   const [jumpToVerseInput, setJumpToVerseInput] = useState('');
   const [showJumpInput, setShowJumpInput] = useState(false);
+  const [fontSize, setFontSize] = useState('medium');
   
   const contentRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   
   const { data: surah, isLoading, error } = useSurah(surahId, reciter);
   const { data: reciters, isLoading: isLoadingReciters } = useReciters();
@@ -59,7 +69,8 @@ export const QuranReader = () => {
             .update({
               last_read_surah: surahId,
               last_read_verse: initialVerseId,
-              reciter: reciter
+              reciter: reciter,
+              font_size: fontSize
             })
             .eq('user_id', user.id);
             
@@ -71,7 +82,7 @@ export const QuranReader = () => {
     };
     
     saveLastRead();
-  }, [surah, initialVerseId, surahId, user, reciter]);
+  }, [surah, initialVerseId, surahId, user, reciter, fontSize]);
   
   useEffect(() => {
     // جلب تفضيلات المستخدم عند تسجيل الدخول
@@ -80,7 +91,7 @@ export const QuranReader = () => {
         try {
           const { data, error } = await supabase
             .from('user_preferences')
-            .select('reciter')
+            .select('reciter, font_size')
             .eq('user_id', user.id)
             .single();
             
@@ -88,6 +99,10 @@ export const QuranReader = () => {
           
           if (data?.reciter) {
             setReciter(data.reciter);
+          }
+          
+          if (data?.font_size) {
+            setFontSize(data.font_size);
           }
         } catch (err) {
           console.error('فشل جلب تفضيلات المستخدم:', err);
@@ -200,6 +215,28 @@ export const QuranReader = () => {
     }
   };
   
+  const handleFontSizeChange = async (value: string) => {
+    setFontSize(value);
+    
+    // حفظ تفضيل حجم الخط للمستخدم
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({ font_size: value })
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+      } catch (err) {
+        console.error('فشل تحديث حجم الخط:', err);
+      }
+    }
+  };
+  
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
@@ -221,7 +258,7 @@ export const QuranReader = () => {
   }
   
   return (
-    <div className="pb-24 page-transition">
+    <div className="pb-24 surah-transition-enter">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold font-arabic">{surah.name}</h1>
@@ -229,9 +266,76 @@ export const QuranReader = () => {
         </div>
         
         <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-4 md:mt-0">
-          <div className="w-full md:w-auto">
+          <div className="flex space-x-2 mb-2 md:mb-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Settings size={14} />
+                  <span>الإعدادات</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="p-2">
+                  <p className="text-sm font-medium mb-1">حجم الخط</p>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant={fontSize === 'small' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleFontSizeChange('small')}
+                    >
+                      صغير
+                    </Button>
+                    <Button 
+                      variant={fontSize === 'medium' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleFontSizeChange('medium')}
+                    >
+                      متوسط
+                    </Button>
+                    <Button 
+                      variant={fontSize === 'large' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleFontSizeChange('large')}
+                    >
+                      كبير
+                    </Button>
+                    <Button 
+                      variant={fontSize === 'xlarge' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleFontSizeChange('xlarge')}
+                    >
+                      كبير جدًا
+                    </Button>
+                  </div>
+                </div>
+                <DropdownMenuItem asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start" 
+                    onClick={toggleTheme}
+                  >
+                    {theme === 'dark' ? (
+                      <>
+                        <Sun size={14} className="ml-2" />
+                        <span>الوضع النهاري</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon size={14} className="ml-2" />
+                        <span>الوضع الليلي</span>
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Select value={reciter} onValueChange={handleReciterChange}>
-              <SelectTrigger className="w-full md:w-[200px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="اختر القارئ" />
               </SelectTrigger>
               <SelectContent>
@@ -249,15 +353,28 @@ export const QuranReader = () => {
           </div>
           
           <div className="flex space-x-2">
-            <Link to="/" className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center space-x-2">
+            <Link 
+              to="/" 
+              className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center space-x-2 nav-button"
+            >
               <List size={18} />
               <span className="mr-2">كافة السور</span>
             </Link>
+            
+            {user && (
+              <Link 
+                to="/bookmarks" 
+                className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/70 transition-colors flex items-center space-x-2 nav-button"
+              >
+                <BookMarked size={18} />
+                <span className="mr-2">المفضلة</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>
       
-      <div className="mb-6 glass p-4 rounded-lg text-center">
+      <div className="mb-6 glass p-4 rounded-xl text-center">
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
             {surah.numberOfAyahs} آية • {surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}
@@ -319,7 +436,7 @@ export const QuranReader = () => {
         </div>
         
         {surah.number !== 9 && (
-          <p className="arabic-text text-xl mt-2 leading-loose">
+          <p className={`arabic-text text-xl mt-2 leading-loose font-size-${fontSize}`}>
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
         )}
@@ -334,6 +451,7 @@ export const QuranReader = () => {
               surahName={surah.name}
               onPlay={handlePlayVerse}
               isPlaying={isPlaying && currentVerse?.number === verse.number}
+              fontSize={fontSize}
             />
           </div>
         ))}
@@ -343,7 +461,7 @@ export const QuranReader = () => {
         <button
           onClick={navigateToPreviousSurah}
           disabled={surahId <= 1}
-          className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+          className={`px-4 py-2 rounded-xl flex items-center space-x-2 nav-button ${
             surahId <= 1 
               ? 'bg-secondary/40 text-muted-foreground cursor-not-allowed'
               : 'bg-secondary hover:bg-secondary/70 transition-colors'
@@ -356,7 +474,7 @@ export const QuranReader = () => {
         <button
           onClick={navigateToNextSurah}
           disabled={surahId >= 114}
-          className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+          className={`px-4 py-2 rounded-xl flex items-center space-x-2 nav-button ${
             surahId >= 114
               ? 'bg-secondary/40 text-muted-foreground cursor-not-allowed'
               : 'bg-secondary hover:bg-secondary/70 transition-colors'
@@ -379,3 +497,4 @@ export const QuranReader = () => {
     </div>
   );
 };
+
